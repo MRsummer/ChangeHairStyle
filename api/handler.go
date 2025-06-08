@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/MRsummer/ChangeHairStyle/internal/handler"
+	"github.com/MRsummer/ChangeHairStyle/pkg/handler"
 	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
 )
 

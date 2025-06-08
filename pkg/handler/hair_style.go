@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"wx-backend/pkg/volcengine"
+	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
 )
 
 // HairStyleHandler 发型生成处理器
