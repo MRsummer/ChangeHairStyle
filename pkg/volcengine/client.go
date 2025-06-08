@@ -24,6 +24,8 @@ import (
         "encoding/json"
         "fmt"
         "image"
+        _ "image/jpeg"
+        _ "image/png"
         "io"
         "log"
         "net/http"
@@ -245,6 +247,8 @@ func validateBase64Image(base64Image string) error {
                 return fmt.Errorf("base64解码失败: %v", err)
         }
 
+        log.Printf("图片大小: %d bytes", len(imageData))
+
         // 检查图片大小（限制为5MB）
         if len(imageData) > 5*1024*1024 {
                 return fmt.Errorf("图片大小超过5MB限制")
@@ -252,6 +256,7 @@ func validateBase64Image(base64Image string) error {
 
         // 检查图片格式
         contentType := http.DetectContentType(imageData)
+        log.Printf("检测到的图片格式: %s", contentType)
         if !strings.HasPrefix(contentType, "image/") {
                 return fmt.Errorf("不支持的图片格式: %s", contentType)
         }
@@ -261,6 +266,8 @@ func validateBase64Image(base64Image string) error {
         if err != nil {
                 return fmt.Errorf("图片解码失败: %v", err)
         }
+
+        log.Printf("图片尺寸: %dx%d", img.Width, img.Height)
 
         // 限制图片尺寸（例如：最大4096x4096）
         if img.Width > 4096 || img.Height > 4096 {
