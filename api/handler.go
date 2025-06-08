@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"wx-backend/internal/handler"
-	"wx-backend/pkg/volcengine"
+	"github.com/MRsummer/ChangeHairStyle/internal/handler"
+	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
 )
 
 var r *gin.Engine
