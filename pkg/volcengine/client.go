@@ -233,4 +233,41 @@ func (c *Client) GenerateHairStyle(imageURL string, prompt string) (string, erro
         }
 
         return "", fmt.Errorf("未找到生成的图片URL")
+}
+
+// GenerateHairStyleWithBase64 使用base64编码的图片数据生成新的发型图片
+func (c *Client) GenerateHairStyleWithBase64(base64Image string, prompt string) (string, error) {
+        // 准备请求参数
+        params := map[string]interface{}{
+                "binary_data_base64": []string{base64Image},
+                "prompt":             prompt,
+                "return_url":         true,
+        }
+
+        // 发送请求
+        response, statusCode, err := c.ProcessCV("byteedit_v2.0", params)
+        if err != nil {
+                return "", fmt.Errorf("请求失败: %v", err)
+        }
+
+        if statusCode != 200 {
+                return "", fmt.Errorf("API返回错误状态码: %d", statusCode)
+        }
+
+        // 解析响应
+        var result map[string]interface{}
+        if err := json.Unmarshal(response, &result); err != nil {
+                return "", fmt.Errorf("解析响应失败: %v", err)
+        }
+
+        // 提取图片URL
+        if data, ok := result["data"].(map[string]interface{}); ok {
+                if imageUrls, ok := data["image_urls"].([]interface{}); ok && len(imageUrls) > 0 {
+                        if url, ok := imageUrls[0].(string); ok {
+                                return url, nil
+                        }
+                }
+        }
+
+        return "", fmt.Errorf("未找到生成的图片URL")
 } 
