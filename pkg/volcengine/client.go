@@ -19,9 +19,11 @@ import (
         "bytes"
         "crypto/hmac"
         "crypto/sha256"
+        "encoding/base64"
         "encoding/hex"
         "encoding/json"
         "fmt"
+        "image"
         "io"
         "log"
         "net/http"
@@ -235,8 +237,46 @@ func (c *Client) GenerateHairStyle(imageURL string, prompt string) (string, erro
         return "", fmt.Errorf("未找到生成的图片URL")
 }
 
+// validateBase64Image 验证base64图片
+func validateBase64Image(base64Image string) error {
+        // 解码base64
+        imageData, err := base64.StdEncoding.DecodeString(base64Image)
+        if err != nil {
+                return fmt.Errorf("base64解码失败: %v", err)
+        }
+
+        // 检查图片大小（限制为5MB）
+        if len(imageData) > 5*1024*1024 {
+                return fmt.Errorf("图片大小超过5MB限制")
+        }
+
+        // 检查图片格式
+        contentType := http.DetectContentType(imageData)
+        if !strings.HasPrefix(contentType, "image/") {
+                return fmt.Errorf("不支持的图片格式: %s", contentType)
+        }
+
+        // 检查图片尺寸
+        img, _, err := image.DecodeConfig(bytes.NewReader(imageData))
+        if err != nil {
+                return fmt.Errorf("图片解码失败: %v", err)
+        }
+
+        // 限制图片尺寸（例如：最大4096x4096）
+        if img.Width > 4096 || img.Height > 4096 {
+                return fmt.Errorf("图片尺寸过大，最大支持4096x4096")
+        }
+
+        return nil
+}
+
 // GenerateHairStyleWithBase64 使用base64编码的图片数据生成新的发型图片
 func (c *Client) GenerateHairStyleWithBase64(base64Image string, prompt string) (string, error) {
+        // 验证图片
+        if err := validateBase64Image(base64Image); err != nil {
+                return "", fmt.Errorf("图片验证失败: %v", err)
+        }
+
         // 准备请求参数
         params := map[string]interface{}{
                 "binary_data_base64": []string{base64Image},
