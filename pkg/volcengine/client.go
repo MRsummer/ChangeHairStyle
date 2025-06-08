@@ -196,4 +196,41 @@ func (c *Client) ProcessCV(reqKey string, params map[string]interface{}) ([]byte
         }
 
         return c.DoRequest("POST", url.Values{}, reqBodyStr)
+}
+
+// GenerateHairStyle 生成新的发型图片
+func (c *Client) GenerateHairStyle(imageURL string, prompt string) (string, error) {
+        // 准备请求参数
+        params := map[string]interface{}{
+                "image_urls": []string{imageURL},
+                "prompt":     prompt,
+                "return_url": true,
+        }
+
+        // 发送请求
+        response, statusCode, err := c.ProcessCV("byteedit_v2.0", params)
+        if err != nil {
+                return "", fmt.Errorf("请求失败: %v", err)
+        }
+
+        if statusCode != 200 {
+                return "", fmt.Errorf("API返回错误状态码: %d", statusCode)
+        }
+
+        // 解析响应
+        var result map[string]interface{}
+        if err := json.Unmarshal(response, &result); err != nil {
+                return "", fmt.Errorf("解析响应失败: %v", err)
+        }
+
+        // 提取图片URL
+        if data, ok := result["data"].(map[string]interface{}); ok {
+                if imageUrls, ok := data["image_urls"].([]interface{}); ok && len(imageUrls) > 0 {
+                        if url, ok := imageUrls[0].(string); ok {
+                                return url, nil
+                        }
+                }
+        }
+
+        return "", fmt.Errorf("未找到生成的图片URL")
 } 
