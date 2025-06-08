@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,9 @@ import (
 	"wx-backend/pkg/volcengine"
 )
 
-func main() {
+var r *gin.Engine
+
+func init() {
 	// 从环境变量获取密钥
 	accessKeyID := os.Getenv("VOLCENGINE_ACCESS_KEY_ID")
 	secretAccessKey := os.Getenv("VOLCENGINE_SECRET_ACCESS_KEY")
@@ -25,7 +28,7 @@ func main() {
 	hairStyleHandler := handler.NewHairStyleHandler(client)
 
 	// 创建Gin引擎
-	r := gin.Default()
+	r = gin.Default()
 
 	// 设置路由
 	r.GET("/ping", func(c *gin.Context) {
@@ -37,15 +40,9 @@ func main() {
 	// 发型生成路由
 	r.POST("/api/hair-style", hairStyleHandler.Generate)
 	r.POST("/api/hair-style/base64", hairStyleHandler.GenerateWithBase64)
+}
 
-	// 获取端口
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	// 启动服务器
-	if err := r.Run(":" + port); err != nil {
-		log.Fatal("服务器启动失败:", err)
-	}
+// Handler 是 Vercel Serverless 函数的入口点
+func Handler(w http.ResponseWriter, req *http.Request) {
+	r.ServeHTTP(w, req)
 } 
