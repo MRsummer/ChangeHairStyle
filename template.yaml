@@ -1,0 +1,33 @@
+Resources:
+  default:
+    Type: TencentCloud::Serverless::Namespace
+    Properties:
+      Description: 发型生成服务
+      Region: ap-guangzhou
+
+  hairStyleService:
+    Type: TencentCloud::Serverless::Function
+    Properties:
+      CodeUri: ./api
+      Description: 发型生成服务
+      Environment:
+        Variables:
+          VOLCENGINE_ACCESS_KEY_ID: ${VOLCENGINE_ACCESS_KEY_ID}
+          VOLCENGINE_SECRET_ACCESS_KEY: ${VOLCENGINE_SECRET_ACCESS_KEY}
+      Handler: main.Handler
+      MemorySize: 256
+      Runtime: Go1.20
+      Timeout: 60
+      Events:
+        - Type: Api
+          Properties:
+            Path: /ping
+            Method: GET
+        - Type: Api
+          Properties:
+            Path: /api/hair-style
+            Method: POST
+        - Type: Api
+          Properties:
+            Path: /api/hair-style/base64
+            Method: POST 
