@@ -2,20 +2,32 @@ package handler
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
+	"github.com/MRsummer/ChangeHairStyle/pkg/qiniu"
 )
 
 // HairStyleHandler 发型生成处理器
 type HairStyleHandler struct {
 	client *volcengine.Client
+	qiniu  *qiniu.Client
 }
 
 // NewHairStyleHandler 创建发型生成处理器
 func NewHairStyleHandler(client *volcengine.Client) *HairStyleHandler {
+	// 创建七牛云客户端
+	qiniuClient := qiniu.NewClient(
+		os.Getenv("QINIU_ACCESS_KEY"),
+		os.Getenv("QINIU_SECRET_KEY"),
+		os.Getenv("QINIU_BUCKET"),
+		os.Getenv("QINIU_DOMAIN"),
+	)
+
 	return &HairStyleHandler{
 		client: client,
+		qiniu:  qiniuClient,
 	}
 }
 
@@ -44,11 +56,21 @@ func (h *HairStyleHandler) Generate(c *gin.Context) {
 		return
 	}
 
+	// 转存到七牛云
+	permanentURL, err := h.qiniu.FetchImage(imageURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "转存图片失败: " + err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "success",
 		"data": gin.H{
-			"image_url": imageURL,
+			"image_url": permanentURL,
 		},
 	})
 }
@@ -78,11 +100,21 @@ func (h *HairStyleHandler) GenerateWithBase64(c *gin.Context) {
 		return
 	}
 
+	// 转存到七牛云
+	permanentURL, err := h.qiniu.FetchImage(imageURL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "转存图片失败: " + err.Error(),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "success",
 		"data": gin.H{
-			"image_url": imageURL,
+			"image_url": permanentURL,
 		},
 	})
 } 

@@ -14,6 +14,10 @@ Resources:
         Variables:
           VOLCENGINE_ACCESS_KEY_ID: ${VOLCENGINE_ACCESS_KEY_ID}
           VOLCENGINE_SECRET_ACCESS_KEY: ${VOLCENGINE_SECRET_ACCESS_KEY}
+          QINIU_ACCESS_KEY: ${QINIU_ACCESS_KEY}
+          QINIU_SECRET_KEY: ${QINIU_SECRET_KEY}
+          QINIU_BUCKET: ${QINIU_BUCKET}
+          QINIU_DOMAIN: ${QINIU_DOMAIN}
       Handler: main.Handler
       MemorySize: 256
       Runtime: Go1.20
