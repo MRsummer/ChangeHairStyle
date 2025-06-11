@@ -1,115 +1,105 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/MRsummer/ChangeHairStyle/pkg/cos"
 	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
-	"github.com/MRsummer/ChangeHairStyle/pkg/qiniu"
+	"github.com/gin-gonic/gin"
 )
 
-// HairStyleHandler 发型生成处理器
-type HairStyleHandler struct {
-	client *volcengine.Client
-	qiniu  *qiniu.Client
+// HairStyleRequest 换发型请求
+type HairStyleRequest struct {
+	ImageURL    string `json:"image_url"`
+	Base64Image string `json:"base64_image"`
+	Prompt      string `json:"prompt" binding:"required"`
 }
 
-// NewHairStyleHandler 创建发型生成处理器
-func NewHairStyleHandler(client *volcengine.Client) *HairStyleHandler {
-	// 创建七牛云客户端
-	qiniuClient := qiniu.NewClient(
-		os.Getenv("QINIU_ACCESS_KEY"),
-		os.Getenv("QINIU_SECRET_KEY"),
-		os.Getenv("QINIU_BUCKET"),
-		os.Getenv("QINIU_DOMAIN"),
+// HairStyleResponse 换发型响应
+type HairStyleResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		ImageURL string `json:"image_url"`
+	} `json:"data"`
+}
+
+// HandleHairStyle 处理换发型请求
+func HandleHairStyle(c *gin.Context) {
+	var req HairStyleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	// 调用火山引擎API
+	client := volcengine.NewClient(
+		os.Getenv("VOLCENGINE_ACCESS_KEY_ID"),
+		os.Getenv("VOLCENGINE_SECRET_ACCESS_KEY"),
 	)
 
-	return &HairStyleHandler{
-		client: client,
-		qiniu:  qiniuClient,
-	}
-}
+	var imageURL string
+	var err error
 
-// Generate 生成发型
-func (h *HairStyleHandler) Generate(c *gin.Context) {
-	var req struct {
-		ImageURL string `json:"image_url" binding:"required"`
-		Prompt   string `json:"prompt" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if req.ImageURL != "" {
+		// 直接使用图片URL调用API
+		imageURL, err = client.GenerateHairStyle(req.ImageURL, req.Prompt)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": fmt.Sprintf("调用火山引擎API失败: %v", err),
+			})
+			return
+		}
+	} else if req.Base64Image != "" {
+		// 使用base64图片数据调用API
+		imageURL, err = client.GenerateHairStyleWithBase64(req.Base64Image, req.Prompt)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    500,
+				"message": fmt.Sprintf("调用火山引擎API失败: %v", err),
+			})
+			return
+		}
+	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
-			"message": "无效的请求参数",
+			"message": "请提供图片URL或Base64数据",
 		})
 		return
 	}
 
-	// 生成发型图片
-	imageURL, err := h.client.GenerateHairStyle(req.ImageURL, req.Prompt)
+	// 创建腾讯云 COS 客户端
+	cosClient, err := cos.NewClient(
+		os.Getenv("COS_SECRET_ID"),
+		os.Getenv("COS_SECRET_KEY"),
+		os.Getenv("COS_BUCKET"),
+		os.Getenv("COS_REGION"),
+	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,
-			"message": err.Error(),
+			"message": fmt.Sprintf("创建腾讯云 COS 客户端失败: %v", err),
 		})
 		return
 	}
 
-	// 转存到七牛云
-	permanentURL, err := h.qiniu.FetchImage(imageURL)
+	// 上传到腾讯云 COS
+	permanentURL, err := cosClient.FetchImage(imageURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,
-			"message": "转存图片失败: " + err.Error(),
+			"message": fmt.Sprintf("上传到腾讯云 COS 失败: %v", err),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
-		"message": "success",
-		"data": gin.H{
-			"image_url": permanentURL,
-		},
-	})
-}
-
-// GenerateWithBase64 使用base64编码的图片数据生成发型
-func (h *HairStyleHandler) GenerateWithBase64(c *gin.Context) {
-	var req struct {
-		Base64Image string `json:"base64_image" binding:"required"`
-		Prompt      string `json:"prompt" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "无效的请求参数",
-		})
-		return
-	}
-
-	// 生成发型图片
-	imageURL, err := h.client.GenerateHairStyleWithBase64(req.Base64Image, req.Prompt)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": err.Error(),
-		})
-		return
-	}
-
-	// 转存到七牛云
-	permanentURL, err := h.qiniu.FetchImage(imageURL)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": "转存图片失败: " + err.Error(),
-		})
-		return
-	}
-
+	// 返回结果
 	c.JSON(http.StatusOK, gin.H{
 		"code":    200,
 		"message": "success",

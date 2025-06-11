@@ -7,12 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/MRsummer/ChangeHairStyle/pkg/handler"
-	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
 )
 
 var r *gin.Engine
@@ -20,20 +18,6 @@ var r *gin.Engine
 func init() {
 	// 设置 Gin 为发布模式
 	gin.SetMode(gin.ReleaseMode)
-
-	// 从环境变量获取密钥
-	accessKeyID := os.Getenv("VOLCENGINE_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("VOLCENGINE_SECRET_ACCESS_KEY")
-
-	if accessKeyID == "" || secretAccessKey == "" {
-		log.Fatal("请设置环境变量 VOLCENGINE_ACCESS_KEY_ID 和 VOLCENGINE_SECRET_ACCESS_KEY")
-	}
-
-	// 创建火山引擎客户端
-	client := volcengine.NewClient(accessKeyID, secretAccessKey)
-
-	// 创建处理器
-	hairStyleHandler := handler.NewHairStyleHandler(client)
 
 	// 创建Gin引擎
 	r = gin.New()
@@ -47,8 +31,7 @@ func init() {
 	})
 
 	// 发型生成路由
-	r.POST("/api/hair-style", hairStyleHandler.Generate)
-	r.POST("/api/hair-style/base64", hairStyleHandler.GenerateWithBase64)
+	r.POST("/api/hair-style", handler.HandleHairStyle)
 }
 
 // main 函数是程序入口点
