@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -10,18 +11,33 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/MRsummer/ChangeHairStyle/pkg/db"
 	"github.com/MRsummer/ChangeHairStyle/pkg/handler"
 )
 
 var r *gin.Engine
+var database *sql.DB
 
 func init() {
+	// 初始化数据库连接
+	var err error
+	database, err = db.InitDB()
+	if err != nil {
+		log.Fatalf("初始化数据库失败: %v", err)
+	}
+
 	// 设置 Gin 为发布模式
 	gin.SetMode(gin.ReleaseMode)
 
 	// 创建Gin引擎
 	r = gin.New()
 	r.Use(gin.Recovery())
+	
+	// 添加数据库中间件
+	r.Use(func(c *gin.Context) {
+		c.Set("db", database)
+		c.Next()
+	})
 
 	// 设置路由
 	r.GET("/ping", func(c *gin.Context) {
@@ -32,10 +48,15 @@ func init() {
 
 	// 发型生成路由
 	r.POST("/api/hair-style", handler.HandleHairStyle)
+	
+	// 获取生成记录路由
+	r.GET("/api/hair-style/records", handler.HandleGetRecords)
 }
 
 // main 函数是程序入口点
 func main() {
+	defer database.Close()
+	
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		r.ServeHTTP(w, req)
 	})
@@ -77,28 +98,27 @@ func Handler(ctx context.Context, req []byte) ([]byte, error) {
 	}
 
 	// 创建请求上下文
-	c := &gin.Context{
-		Request: &http.Request{
-			Method: request.Method,
-			URL: &url.URL{
-				Path: request.Path,
-			},
-			Header: http.Header{},
+	httpReq := &http.Request{
+		Method: request.Method,
+		URL: &url.URL{
+			Path:     request.Path,
+			RawQuery: buildQueryString(request.Query),
 		},
+		Header: http.Header{},
 	}
 
 	// 设置请求头
 	for k, v := range request.Headers {
-		c.Request.Header.Set(k, v)
+		httpReq.Header.Set(k, v)
 	}
 
 	// 设置请求体
 	if request.Body != "" {
-		c.Request.Body = ioutil.NopCloser(strings.NewReader(request.Body))
+		httpReq.Body = ioutil.NopCloser(strings.NewReader(request.Body))
 	}
 
 	// 处理请求
-	r.ServeHTTP(w, c.Request)
+	r.ServeHTTP(w, httpReq)
 
 	// 设置响应
 	response.StatusCode = w.statusCode
@@ -109,6 +129,20 @@ func Handler(ctx context.Context, req []byte) ([]byte, error) {
 
 	// 返回响应
 	return json.Marshal(response)
+}
+
+// buildQueryString 构建查询字符串
+func buildQueryString(queryParams map[string]string) string {
+	if len(queryParams) == 0 {
+		return ""
+	}
+	
+	values := url.Values{}
+	for k, v := range queryParams {
+		values.Add(k, v)
+	}
+	
+	return values.Encode()
 }
 
 // responseWriter 实现 http.ResponseWriter 接口

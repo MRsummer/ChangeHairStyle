@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/cos"
+	"github.com/MRsummer/ChangeHairStyle/pkg/db"
+	"github.com/MRsummer/ChangeHairStyle/pkg/model"
 	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +18,7 @@ type HairStyleRequest struct {
 	ImageURL    string `json:"image_url"`
 	Base64Image string `json:"base64_image"`
 	Prompt      string `json:"prompt" binding:"required"`
+	UserID      string `json:"user_id" binding:"required"`
 }
 
 // HairStyleResponse 换发型响应
@@ -99,12 +103,76 @@ func HandleHairStyle(c *gin.Context) {
 		return
 	}
 
+	// 保存生成记录
+	dbConn := c.MustGet("db").(*sql.DB)
+	record := &model.HairStyleRecord{
+		UserID:   req.UserID,
+		ImageURL: permanentURL,
+		Prompt:   req.Prompt,
+	}
+	if err := db.SaveHairStyleRecord(dbConn, record); err != nil {
+		// 记录保存失败不影响返回结果，只记录错误
+		fmt.Printf("保存生成记录失败: %v\n", err)
+	}
+
 	// 返回结果
 	c.JSON(http.StatusOK, gin.H{
-		"code":    200,
+		"code":    0,
 		"message": "success",
 		"data": gin.H{
 			"image_url": permanentURL,
 		},
+	})
+}
+
+// HandleGetRecords 获取用户的生成记录
+func HandleGetRecords(c *gin.Context) {
+	userID := c.Query("user_id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "请提供用户ID",
+		})
+		return
+	}
+
+	// 获取分页参数
+	page := 1
+	pageSize := 10
+	if pageStr := c.Query("page"); pageStr != "" {
+		if _, err := fmt.Sscanf(pageStr, "%d", &page); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    400,
+				"message": "页码参数错误",
+			})
+			return
+		}
+	}
+	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
+		if _, err := fmt.Sscanf(pageSizeStr, "%d", &pageSize); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    400,
+				"message": "每页数量参数错误",
+			})
+			return
+		}
+	}
+
+	// 获取记录
+	dbConn := c.MustGet("db").(*sql.DB)
+	response, err := db.GetHairStyleRecords(dbConn, userID, page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": fmt.Sprintf("获取记录失败: %v", err),
+		})
+		return
+	}
+
+	// 返回结果
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    response,
 	})
 } 

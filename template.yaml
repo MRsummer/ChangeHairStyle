@@ -45,10 +45,18 @@ Resources:
           COS_SECRET_KEY: ${COS_SECRET_KEY}
           COS_BUCKET: ${COS_BUCKET}
           COS_REGION: ${COS_REGION}
+          DB_HOST: ${DB_HOST}
+          DB_PORT: ${DB_PORT}
+          DB_USER: ${DB_USER}
+          DB_PASSWORD: ${DB_PASSWORD}
+          DB_NAME: ${DB_NAME}
       Handler: main
       MemorySize: 256
       Runtime: Go1
       Timeout: 60
+      VpcConfig:
+        VpcId: ${VPC_ID}
+        SubnetId: ${SUBNET_ID}
       Events:
         hair-style:
           Type: APIGateway
