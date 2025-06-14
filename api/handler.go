@@ -40,9 +40,10 @@ func init() {
 	})
 
 	// 设置路由
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"code":    0,
+			"message": "success",
 		})
 	})
 
@@ -58,7 +59,7 @@ func init() {
 	// 广场相关路由
 	r.POST("/api/square/share", handler.HandleShareToSquare)
 	r.GET("/api/square/contents", handler.HandleGetSquareContents)
-	r.POST("/api/square/like", handler.HandleLikeContent)
+	r.POST("/api/square/like", handler.HandleLike)
 }
 
 // main 函数是程序入口点
