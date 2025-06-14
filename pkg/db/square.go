@@ -43,7 +43,8 @@ func GetSquareContents(db *sql.DB, userID string, page, pageSize int) (*model.Sq
         SELECT 
             sc.id, sc.user_id, sc.record_id, sc.like_count, sc.created_at, sc.updated_at,
             hr.image_url, hr.prompt, hr.created_at as record_created_at,
-            ui.nickname, ui.avatar_url,
+            COALESCE(ui.nickname, CONCAT('用户', LEFT(sc.user_id, 6))) as nickname,
+            COALESCE(ui.avatar_url, 'https://hairstyle-1255379329.cos.ap-guangzhou.myqcloud.com/avatar.png') as avatar_url,
             CASE WHEN lr.id IS NOT NULL THEN 1 ELSE 0 END as is_liked
         FROM square_content sc
         LEFT JOIN hair_style_records hr ON sc.record_id = hr.id
