@@ -46,7 +46,7 @@ func GetSquareContents(db *sql.DB, userID string, page, pageSize int) (*model.Sq
             ui.nickname, ui.avatar_url,
             CASE WHEN lr.id IS NOT NULL THEN 1 ELSE 0 END as is_liked
         FROM square_content sc
-        LEFT JOIN hair_style_record hr ON sc.record_id = hr.id
+        LEFT JOIN hair_style_records hr ON sc.record_id = hr.id
         LEFT JOIN user_info ui ON sc.user_id = ui.user_id
         LEFT JOIN like_record lr ON sc.id = lr.content_id AND lr.user_id = ?
         ORDER BY sc.created_at DESC
