@@ -10,9 +10,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"github.com/MRsummer/ChangeHairStyle/pkg/db"
 	"github.com/MRsummer/ChangeHairStyle/pkg/handler"
+	"github.com/gin-gonic/gin"
 )
 
 var r *gin.Engine
@@ -32,7 +32,7 @@ func init() {
 	// 创建Gin引擎
 	r = gin.New()
 	r.Use(gin.Recovery())
-	
+
 	// 添加数据库中间件
 	r.Use(func(c *gin.Context) {
 		c.Set("db", database)
@@ -48,15 +48,23 @@ func init() {
 
 	// 发型生成路由
 	r.POST("/api/hair-style", handler.HandleHairStyle)
-	
+
 	// 获取生成记录路由
 	r.GET("/api/hair-style/records", handler.HandleGetRecords)
+
+	// 用户信息路由
+	r.POST("/api/user/info", handler.HandleUpdateUserInfo)
+
+	// 广场相关路由
+	r.POST("/api/square/share", handler.HandleShareToSquare)
+	r.GET("/api/square/contents", handler.HandleGetSquareContents)
+	r.POST("/api/square/like", handler.HandleLikeContent)
 }
 
 // main 函数是程序入口点
 func main() {
 	defer database.Close()
-	
+
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		r.ServeHTTP(w, req)
 	})
@@ -67,12 +75,12 @@ func main() {
 func Handler(ctx context.Context, req []byte) ([]byte, error) {
 	// 解析请求
 	var request struct {
-		Path       string            `json:"path"`
-		Method     string            `json:"method"`
-		Headers    map[string]string `json:"headers"`
-		Query      map[string]string `json:"query"`
-		Body       string            `json:"body"`
-		IsBase64   bool             `json:"isBase64"`
+		Path     string            `json:"path"`
+		Method   string            `json:"method"`
+		Headers  map[string]string `json:"headers"`
+		Query    map[string]string `json:"query"`
+		Body     string            `json:"body"`
+		IsBase64 bool              `json:"isBase64"`
 	}
 
 	if err := json.Unmarshal(req, &request); err != nil {
@@ -84,7 +92,7 @@ func Handler(ctx context.Context, req []byte) ([]byte, error) {
 		StatusCode int               `json:"statusCode"`
 		Headers    map[string]string `json:"headers"`
 		Body       string            `json:"body"`
-		IsBase64   bool             `json:"isBase64"`
+		IsBase64   bool              `json:"isBase64"`
 	}{
 		Headers: map[string]string{
 			"Content-Type": "application/json",
@@ -136,12 +144,12 @@ func buildQueryString(queryParams map[string]string) string {
 	if len(queryParams) == 0 {
 		return ""
 	}
-	
+
 	values := url.Values{}
 	for k, v := range queryParams {
 		values.Add(k, v)
 	}
-	
+
 	return values.Encode()
 }
 
@@ -163,4 +171,4 @@ func (w *responseWriter) Write(data []byte) (int, error) {
 
 func (w *responseWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
-} 
+}
