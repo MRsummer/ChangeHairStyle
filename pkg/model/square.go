@@ -21,8 +21,9 @@ type SquareContent struct {
 
 // SquareContentResponse 广场内容列表响应
 type SquareContentResponse struct {
-	Total   int64           `json:"total"`   // 总记录数
-	Records []SquareContent `json:"records"` // 记录列表
+	Total      int64           `json:"total"`
+	Records    []SquareContent `json:"records"`
+	NextCursor int64           `json:"next_cursor"`
 }
 
 // ShareToSquareRequest 分享到广场请求

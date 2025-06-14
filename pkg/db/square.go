@@ -29,7 +29,7 @@ func ShareToSquare(db *sql.DB, content *model.SquareContent) error {
 }
 
 // GetSquareContents 获取广场内容列表
-func GetSquareContents(db *sql.DB, userID string, page, pageSize int) (*model.SquareContentResponse, error) {
+func GetSquareContents(db *sql.DB, userID string, cursor int64, pageSize int) (*model.SquareContentResponse, error) {
 	// 获取总记录数
 	countQuery := `SELECT COUNT(*) FROM square_content`
 	var total int64
@@ -50,18 +50,24 @@ func GetSquareContents(db *sql.DB, userID string, page, pageSize int) (*model.Sq
         LEFT JOIN hair_style_records hr ON sc.record_id = hr.id
         LEFT JOIN user_info ui ON sc.user_id = ui.user_id
         LEFT JOIN like_record lr ON sc.id = lr.content_id AND lr.user_id = ?
-        ORDER BY sc.created_at DESC
-        LIMIT ? OFFSET ?
+        WHERE sc.id < ?
+        ORDER BY sc.id DESC
+        LIMIT ?
     `
 
-	offset := (page - 1) * pageSize
-	rows, err := db.Query(query, userID, pageSize, offset)
+	// 如果是第一页，使用一个足够大的ID作为cursor
+	if cursor == 0 {
+		cursor = 9223372036854775807 // MySQL BIGINT的最大值
+	}
+
+	rows, err := db.Query(query, userID, cursor, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("查询广场内容失败: %v", err)
 	}
 	defer rows.Close()
 
 	var contents []model.SquareContent
+	var nextCursor int64
 	for rows.Next() {
 		var content model.SquareContent
 		var record model.HairStyleRecord
@@ -88,11 +94,18 @@ func GetSquareContents(db *sql.DB, userID string, page, pageSize int) (*model.Sq
 		content.Record = &record
 		content.UserInfo = &userInfo
 		contents = append(contents, content)
+		nextCursor = content.ID
+	}
+
+	// 如果没有更多数据，nextCursor设为0
+	if len(contents) < pageSize {
+		nextCursor = 0
 	}
 
 	return &model.SquareContentResponse{
-		Total:   total,
-		Records: contents,
+		Total:      total,
+		Records:    contents,
+		NextCursor: nextCursor,
 	}, nil
 }
 

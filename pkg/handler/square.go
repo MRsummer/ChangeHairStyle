@@ -58,11 +58,11 @@ func HandleGetSquareContents(c *gin.Context) {
 	}
 
 	// 获取分页参数
-	page := 1
+	cursor := int64(0)
 	pageSize := 10
-	if pageStr := c.Query("page"); pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil {
-			page = p
+	if cursorStr := c.Query("cursor"); cursorStr != "" {
+		if c, err := strconv.ParseInt(cursorStr, 10, 64); err == nil {
+			cursor = c
 		}
 	}
 	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
@@ -73,7 +73,7 @@ func HandleGetSquareContents(c *gin.Context) {
 
 	// 获取广场内容列表
 	dbConn := c.MustGet("db").(*sql.DB)
-	response, err := db.GetSquareContents(dbConn, userID, page, pageSize)
+	response, err := db.GetSquareContents(dbConn, userID, cursor, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,
