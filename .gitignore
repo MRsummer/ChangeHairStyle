@@ -41,4 +41,7 @@ Thumbs.db
 *.log
 
 # Config files with sensitive information
-config/config.yaml 
+config/config.yaml
+
+# Build directory
+build/ 
