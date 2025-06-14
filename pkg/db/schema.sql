@@ -36,4 +36,13 @@ CREATE TABLE IF NOT EXISTS like_record (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_user_content (user_id, content_id),
     INDEX idx_content_id (content_id)
-); 
+);
+
+-- 修改用户信息表，添加coin和邀请码相关字段
+ALTER TABLE user_info
+    ADD COLUMN coin INT DEFAULT 60,
+    ADD COLUMN invite_code VARCHAR(6) UNIQUE,
+    ADD COLUMN used_invite_code VARCHAR(6),
+    ADD COLUMN last_sign_in_date DATE,
+    ADD INDEX idx_invite_code (invite_code),
+    ADD INDEX idx_used_invite_code (used_invite_code); 
