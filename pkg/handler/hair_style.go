@@ -42,6 +42,24 @@ func HandleHairStyle(c *gin.Context) {
 		return
 	}
 
+	// 检查coin是否足够
+	dbConn := c.MustGet("db").(*sql.DB)
+	enough, err := db.CheckCoin(dbConn, req.UserID, 20)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": err.Error(),
+		})
+		return
+	}
+	if !enough {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": "造型币不足",
+		})
+		return
+	}
+
 	// 调用火山引擎API
 	client := volcengine.NewClient(
 		os.Getenv("VOLCENGINE_ACCESS_KEY_ID"),
@@ -49,8 +67,6 @@ func HandleHairStyle(c *gin.Context) {
 	)
 
 	var imageURL string
-	var err error
-
 	if req.ImageURL != "" {
 		// 直接使用图片URL调用API
 		imageURL, err = client.GenerateHairStyle(req.ImageURL, req.Prompt)
@@ -105,15 +121,23 @@ func HandleHairStyle(c *gin.Context) {
 	}
 
 	// 保存生成记录
-	dbConn := c.MustGet("db").(*sql.DB)
 	record := &model.HairStyleRecord{
 		UserID:   req.UserID,
 		ImageURL: permanentURL,
 		Prompt:   req.Prompt,
 	}
 	if err := db.SaveHairStyleRecord(dbConn, record); err != nil {
-		// 记录保存失败不影响返回结果，只记录错误
-		fmt.Printf("保存生成记录失败: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": fmt.Sprintf("保存生成记录失败: %v", err),
+		})
+		return
+	}
+
+	// 扣除coin
+	if err := db.DeductCoin(dbConn, req.UserID, 20); err != nil {
+		// 记录保存成功但扣除coin失败，记录错误但不影响返回结果
+		fmt.Printf("扣除coin失败: %v\n", err)
 	}
 
 	// 返回结果

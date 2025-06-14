@@ -3,35 +3,39 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/model"
 )
 
 // SaveHairStyleRecord 保存发型生成记录
-func SaveHairStyleRecord(db *sql.DB, record *model.HairStyleRecord) error {
+func SaveHairStyleRecord(db interface{}, record *model.HairStyleRecord) error {
 	query := `
-		INSERT INTO hair_style_records (user_id, image_url, prompt, created_at)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO hair_style_records (user_id, image_url, prompt)
+		VALUES (?, ?, ?)
 	`
-	result, err := db.Exec(
-		query,
-		record.UserID,
-		record.ImageURL,
-		record.Prompt,
-		time.Now(),
-	)
-	if err != nil {
-		return fmt.Errorf("保存记录失败: %v", err)
+
+	var result sql.Result
+	var err error
+
+	switch tx := db.(type) {
+	case *sql.DB:
+		result, err = tx.Exec(query, record.UserID, record.ImageURL, record.Prompt)
+	case *sql.Tx:
+		result, err = tx.Exec(query, record.UserID, record.ImageURL, record.Prompt)
+	default:
+		return fmt.Errorf("不支持的数据库连接类型")
 	}
 
-	// 获取插入的ID
+	if err != nil {
+		return fmt.Errorf("保存生成记录失败: %v", err)
+	}
+
 	id, err := result.LastInsertId()
 	if err != nil {
-		return fmt.Errorf("获取插入ID失败: %v", err)
+		return fmt.Errorf("获取记录ID失败: %v", err)
 	}
-	record.ID = id
 
+	record.ID = id
 	return nil
 }
 
@@ -87,4 +91,4 @@ func GetHairStyleRecords(db *sql.DB, userID string, page, pageSize int) (*model.
 		Total:   total,
 		Records: records,
 	}, nil
-} 
+}

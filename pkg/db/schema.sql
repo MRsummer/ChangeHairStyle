@@ -4,9 +4,15 @@ CREATE TABLE IF NOT EXISTS user_info (
     user_id VARCHAR(64) NOT NULL UNIQUE,
     nickname VARCHAR(64),
     avatar_url VARCHAR(255),
+    coin INT DEFAULT 60,
+    invite_code VARCHAR(6) UNIQUE,
+    used_invite_code VARCHAR(6),
+    last_sign_in_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id)
+    INDEX idx_user_id (user_id),
+    INDEX idx_invite_code (invite_code),
+    INDEX idx_used_invite_code (used_invite_code)
 );
 
 -- 广场内容表

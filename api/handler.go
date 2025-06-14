@@ -55,6 +55,9 @@ func init() {
 
 	// 用户信息路由
 	r.POST("/api/user/info", handler.HandleUpdateUserInfo)
+	r.POST("/api/user/invite-code/generate", handler.HandleGenerateInviteCode)
+	r.POST("/api/user/invite-code/use", handler.HandleUseInviteCode)
+	r.POST("/api/user/sign-in", handler.HandleSignIn)
 
 	// 广场相关路由
 	r.POST("/api/square/share", handler.HandleShareToSquare)
