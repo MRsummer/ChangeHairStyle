@@ -27,6 +27,7 @@ type HairStyleResponse struct {
 	Message string `json:"message"`
 	Data    struct {
 		ImageURL string `json:"image_url"`
+		RecordID int64  `json:"record_id"`
 	} `json:"data"`
 }
 
@@ -121,6 +122,7 @@ func HandleHairStyle(c *gin.Context) {
 		"message": "success",
 		"data": gin.H{
 			"image_url": permanentURL,
+			"record_id": record.ID,
 		},
 	})
 }
@@ -175,4 +177,4 @@ func HandleGetRecords(c *gin.Context) {
 		"message": "success",
 		"data":    response,
 	})
-} 
+}
