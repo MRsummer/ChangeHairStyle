@@ -23,11 +23,6 @@ type UpdateUserInfoRequest struct {
 	AvatarURL string `json:"avatar_url"`
 }
 
-// GenerateInviteCodeRequest 生成邀请码请求
-type GenerateInviteCodeRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // UseInviteCodeRequest 使用邀请码请求
 type UseInviteCodeRequest struct {
 	UserID     string `json:"user_id" binding:"required"`

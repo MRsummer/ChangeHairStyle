@@ -46,36 +46,6 @@ func HandleUpdateUserInfo(c *gin.Context) {
 	})
 }
 
-// HandleGenerateInviteCode 处理生成邀请码请求
-func HandleGenerateInviteCode(c *gin.Context) {
-	var req model.GenerateInviteCodeRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    400,
-			"message": "请求参数错误",
-		})
-		return
-	}
-
-	dbConn := c.MustGet("db").(*sql.DB)
-	inviteCode, err := db.GenerateInviteCode(dbConn, req.UserID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
-			"message": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data": gin.H{
-			"invite_code": inviteCode,
-		},
-	})
-}
-
 // HandleUseInviteCode 处理使用邀请码请求
 func HandleUseInviteCode(c *gin.Context) {
 	var req model.UseInviteCodeRequest

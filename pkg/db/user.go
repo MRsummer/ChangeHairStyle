@@ -72,47 +72,6 @@ func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
 	return userInfo, nil
 }
 
-// GenerateInviteCode 生成邀请码
-func GenerateInviteCode(db *sql.DB, userID string) (string, error) {
-	// 先查询是否已有邀请码
-	var existingCode string
-	err := db.QueryRow("SELECT invite_code FROM user_info WHERE user_id = ?", userID).Scan(&existingCode)
-	if err != nil && err != sql.ErrNoRows {
-		return "", fmt.Errorf("查询邀请码失败: %v", err)
-	}
-
-	// 如果已有邀请码，直接返回
-	if existingCode != "" {
-		return existingCode, nil
-	}
-
-	// 生成6位随机邀请码
-	const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, 6)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	inviteCode := string(b)
-
-	// 更新用户邀请码
-	query := `UPDATE user_info SET invite_code = ? WHERE user_id = ?`
-	result, err := db.Exec(query, inviteCode, userID)
-	if err != nil {
-		return "", fmt.Errorf("更新邀请码失败: %v", err)
-	}
-
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return "", fmt.Errorf("获取影响行数失败: %v", err)
-	}
-	if affected == 0 {
-		return "", fmt.Errorf("用户不存在")
-	}
-
-	return inviteCode, nil
-}
-
 // UseInviteCode 使用邀请码
 func UseInviteCode(db *sql.DB, userID, inviteCode string) error {
 	// 开始事务
@@ -226,12 +185,21 @@ func DeductCoin(db *sql.DB, userID string, amount int) error {
 
 // CreateUser 创建新用户
 func CreateUser(db *sql.DB, userInfo *model.UserInfo) error {
+	// 生成6位随机邀请码
+	const charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, 6)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	inviteCode := string(b)
+
 	query := `
-        INSERT INTO user_info (user_id, coin)
-        VALUES (?, ?)
+        INSERT INTO user_info (user_id, coin, invite_code)
+        VALUES (?, ?, ?)
     `
 
-	result, err := db.Exec(query, userInfo.UserID, userInfo.Coin)
+	result, err := db.Exec(query, userInfo.UserID, userInfo.Coin, inviteCode)
 	if err != nil {
 		return fmt.Errorf("创建用户失败: %v", err)
 	}
@@ -242,5 +210,6 @@ func CreateUser(db *sql.DB, userInfo *model.UserInfo) error {
 	}
 
 	userInfo.ID = id
+	userInfo.InviteCode = inviteCode
 	return nil
 }
