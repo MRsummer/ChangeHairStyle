@@ -179,40 +179,6 @@ func SignIn(db *sql.DB, userID string) error {
 	return nil
 }
 
-// CheckAndDeductCoin 检查并扣除coin
-func CheckAndDeductCoin(db *sql.DB, userID string, amount int) error {
-	// 开始事务
-	tx, err := db.Begin()
-	if err != nil {
-		return fmt.Errorf("开始事务失败: %v", err)
-	}
-	defer tx.Rollback()
-
-	// 检查coin是否足够
-	var coin int
-	err = tx.QueryRow("SELECT coin FROM user_info WHERE user_id = ?", userID).Scan(&coin)
-	if err != nil {
-		return fmt.Errorf("查询coin失败: %v", err)
-	}
-
-	if coin < amount {
-		return fmt.Errorf("造型币不足")
-	}
-
-	// 扣除coin
-	_, err = tx.Exec("UPDATE user_info SET coin = coin - ? WHERE user_id = ?", amount, userID)
-	if err != nil {
-		return fmt.Errorf("扣除coin失败: %v", err)
-	}
-
-	// 提交事务
-	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("提交事务失败: %v", err)
-	}
-
-	return nil
-}
-
 // CheckCoin 检查用户金币是否足够
 func CheckCoin(db *sql.DB, userID string, amount int) (bool, error) {
 	var coin int
