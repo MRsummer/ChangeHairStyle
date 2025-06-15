@@ -41,11 +41,13 @@ type WxLoginRequest struct {
 
 // WxLoginResponse 微信登录响应
 type WxLoginResponse struct {
-	UserID    string `json:"user_id"`
-	Nickname  string `json:"nickname,omitempty"`
-	AvatarURL string `json:"avatar_url,omitempty"`
-	Coin      int    `json:"coin"`
-	Token     string `json:"token"`
+	UserID         string     `json:"user_id"`
+	Nickname       string     `json:"nickname"`
+	AvatarURL      string     `json:"avatar_url"`
+	Coin           int        `json:"coin"`
+	InviteCode     string     `json:"invite_code"`
+	UsedInviteCode string     `json:"used_invite_code"`
+	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
 }
 
 // GetUserInfoRequest 获取用户信息请求

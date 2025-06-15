@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/db"
 	"github.com/MRsummer/ChangeHairStyle/pkg/model"
@@ -193,19 +192,18 @@ func HandleWxLogin(c *gin.Context) {
 		fmt.Printf("[WxLogin] 用户已存在: userID=%s, coin=%d\n", userID, userInfo.Coin)
 	}
 
-	// 生成token（这里使用简单的示例，实际应该使用更安全的token生成方式）
-	token := fmt.Sprintf("%s_%d", userID, time.Now().Unix())
-
 	// 返回登录响应
 	c.JSON(http.StatusOK, gin.H{
 		"code":    0,
 		"message": "success",
 		"data": model.WxLoginResponse{
-			UserID:    userInfo.UserID,
-			Nickname:  userInfo.Nickname,
-			AvatarURL: userInfo.AvatarURL,
-			Coin:      userInfo.Coin,
-			Token:     token,
+			UserID:         userInfo.UserID,
+			Nickname:       userInfo.Nickname,
+			AvatarURL:      userInfo.AvatarURL,
+			Coin:           userInfo.Coin,
+			InviteCode:     userInfo.InviteCode,
+			UsedInviteCode: userInfo.UsedInviteCode,
+			LastSignInDate: userInfo.LastSignInDate,
 		},
 	})
 }
