@@ -30,7 +30,7 @@ func UpdateUserInfo(db *sql.DB, userInfo *model.UserInfo) error {
 // GetUserInfo 获取用户信息
 func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
 	query := `
-        SELECT id, user_id, nickname, avatar_url, created_at, updated_at
+        SELECT id, user_id, nickname, avatar_url, coin, created_at, updated_at
         FROM user_info
         WHERE user_id = ?
     `
@@ -41,6 +41,7 @@ func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
 		&userInfo.UserID,
 		&userInfo.Nickname,
 		&userInfo.AvatarURL,
+		&userInfo.Coin,
 		&userInfo.CreatedAt,
 		&userInfo.UpdatedAt,
 	)
