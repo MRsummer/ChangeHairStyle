@@ -38,3 +38,17 @@ type UseInviteCodeRequest struct {
 type SignInRequest struct {
 	UserID string `json:"user_id" binding:"required"`
 }
+
+// WxLoginRequest 微信登录请求
+type WxLoginRequest struct {
+	Code string `json:"code" binding:"required"`
+}
+
+// WxLoginResponse 微信登录响应
+type WxLoginResponse struct {
+	UserID    string `json:"user_id"`
+	Nickname  string `json:"nickname,omitempty"`
+	AvatarURL string `json:"avatar_url,omitempty"`
+	Coin      int    `json:"coin"`
+	Token     string `json:"token"`
+}

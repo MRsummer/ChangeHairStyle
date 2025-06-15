@@ -240,3 +240,24 @@ func DeductCoin(db *sql.DB, userID string, amount int) error {
 
 	return nil
 }
+
+// CreateUser 创建新用户
+func CreateUser(db *sql.DB, userInfo *model.UserInfo) error {
+	query := `
+        INSERT INTO user_info (user_id, coin)
+        VALUES (?, ?)
+    `
+
+	result, err := db.Exec(query, userInfo.UserID, userInfo.Coin)
+	if err != nil {
+		return fmt.Errorf("创建用户失败: %v", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("获取用户ID失败: %v", err)
+	}
+
+	userInfo.ID = id
+	return nil
+}

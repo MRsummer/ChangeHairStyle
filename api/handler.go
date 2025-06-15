@@ -58,6 +58,7 @@ func init() {
 	r.POST("/api/user/invite-code/generate", handler.HandleGenerateInviteCode)
 	r.POST("/api/user/invite-code/use", handler.HandleUseInviteCode)
 	r.POST("/api/user/sign-in", handler.HandleSignIn)
+	r.POST("/api/user/wx-login", handler.HandleWxLogin)
 
 	// 广场相关路由
 	r.POST("/api/square/share", handler.HandleShareToSquare)
