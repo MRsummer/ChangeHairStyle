@@ -192,8 +192,10 @@ func HandleWxLogin(c *gin.Context) {
 
 	// 查询用户信息
 	dbConn := c.MustGet("db").(*sql.DB)
+	fmt.Printf("[WxLogin] 查询用户信息: userID=%s\n", userID)
 	userInfo, err := db.GetUserInfo(dbConn, userID)
 	if err != nil {
+		fmt.Printf("[WxLogin] 查询用户信息失败: userID=%s, error=%v\n", userID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,
 			"message": fmt.Sprintf("获取用户信息失败: %v", err),
@@ -203,17 +205,22 @@ func HandleWxLogin(c *gin.Context) {
 
 	// 如果用户不存在，创建新用户
 	if userInfo == nil {
+		fmt.Printf("[WxLogin] 用户不存在，创建新用户: userID=%s\n", userID)
 		userInfo = &model.UserInfo{
 			UserID: userID,
 			Coin:   60, // 初始金币
 		}
 		if err := db.CreateUser(dbConn, userInfo); err != nil {
+			fmt.Printf("[WxLogin] 创建用户失败: userID=%s, error=%v\n", userID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"code":    500,
 				"message": fmt.Sprintf("创建用户失败: %v", err),
 			})
 			return
 		}
+		fmt.Printf("[WxLogin] 创建用户成功: userID=%s, coin=%d\n", userID, userInfo.Coin)
+	} else {
+		fmt.Printf("[WxLogin] 用户已存在: userID=%s, coin=%d\n", userID, userInfo.Coin)
 	}
 
 	// 生成token（这里使用简单的示例，实际应该使用更安全的token生成方式）
