@@ -210,17 +210,17 @@ func HandleWxLogin(c *gin.Context) {
 
 // HandleGetUserInfo 处理获取用户信息请求
 func HandleGetUserInfo(c *gin.Context) {
-	var req model.GetUserInfoRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	userID := c.Query("user_id")
+	if userID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    400,
-			"message": "请求参数错误",
+			"message": "请求参数错误：user_id不能为空",
 		})
 		return
 	}
 
 	dbConn := c.MustGet("db").(*sql.DB)
-	userInfo, err := db.GetUserInfo(dbConn, req.UserID)
+	userInfo, err := db.GetUserInfo(dbConn, userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,

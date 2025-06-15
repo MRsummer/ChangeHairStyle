@@ -50,11 +50,6 @@ type WxLoginResponse struct {
 	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
 }
 
-// GetUserInfoRequest 获取用户信息请求
-type GetUserInfoRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-}
-
 // GetUserInfoResponse 获取用户信息响应
 type GetUserInfoResponse struct {
 	UserID         string     `json:"user_id"`
