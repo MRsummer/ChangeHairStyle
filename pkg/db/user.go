@@ -36,11 +36,12 @@ func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
     `
 
 	userInfo := &model.UserInfo{}
+	var nickname, avatarURL sql.NullString
 	err := db.QueryRow(query, userID).Scan(
 		&userInfo.ID,
 		&userInfo.UserID,
-		&userInfo.Nickname,
-		&userInfo.AvatarURL,
+		&nickname,
+		&avatarURL,
 		&userInfo.Coin,
 		&userInfo.CreatedAt,
 		&userInfo.UpdatedAt,
@@ -51,6 +52,14 @@ func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
 	}
 	if err != nil {
 		return nil, fmt.Errorf("获取用户信息失败: %v", err)
+	}
+
+	// 将 sql.NullString 转换为 string
+	if nickname.Valid {
+		userInfo.Nickname = nickname.String
+	}
+	if avatarURL.Valid {
+		userInfo.AvatarURL = avatarURL.String
 	}
 
 	return userInfo, nil
