@@ -40,19 +40,23 @@ func UpdateUserInfo(db *sql.DB, userInfo *model.UserInfo) error {
 // GetUserInfo 获取用户信息
 func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
 	query := `
-        SELECT id, user_id, nickname, avatar_url, coin, created_at, updated_at
+        SELECT id, user_id, nickname, avatar_url, coin, invite_code, used_invite_code, last_sign_in_date, created_at, updated_at
         FROM user_info
         WHERE user_id = ?
     `
 
 	userInfo := &model.UserInfo{}
-	var nickname, avatarURL sql.NullString
+	var nickname, avatarURL, inviteCode, usedInviteCode sql.NullString
+	var lastSignInDate sql.NullTime
 	err := db.QueryRow(query, userID).Scan(
 		&userInfo.ID,
 		&userInfo.UserID,
 		&nickname,
 		&avatarURL,
 		&userInfo.Coin,
+		&inviteCode,
+		&usedInviteCode,
+		&lastSignInDate,
 		&userInfo.CreatedAt,
 		&userInfo.UpdatedAt,
 	)
@@ -70,6 +74,15 @@ func GetUserInfo(db *sql.DB, userID string) (*model.UserInfo, error) {
 	}
 	if avatarURL.Valid {
 		userInfo.AvatarURL = avatarURL.String
+	}
+	if inviteCode.Valid {
+		userInfo.InviteCode = inviteCode.String
+	}
+	if usedInviteCode.Valid {
+		userInfo.UsedInviteCode = usedInviteCode.String
+	}
+	if lastSignInDate.Valid {
+		userInfo.LastSignInDate = &lastSignInDate.Time
 	}
 
 	return userInfo, nil
