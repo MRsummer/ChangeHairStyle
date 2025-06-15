@@ -12,16 +12,23 @@ import (
 // UpdateUserInfo 更新用户信息
 func UpdateUserInfo(db *sql.DB, userInfo *model.UserInfo) error {
 	query := `
-        INSERT INTO user_info (user_id, nickname, avatar_url)
-        VALUES (?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-        nickname = VALUES(nickname),
-        avatar_url = VALUES(avatar_url)
+        UPDATE user_info 
+        SET nickname = ?, avatar_url = ?
+        WHERE user_id = ?
     `
 
-	_, err := db.Exec(query, userInfo.UserID, userInfo.Nickname, userInfo.AvatarURL)
+	result, err := db.Exec(query, userInfo.Nickname, userInfo.AvatarURL, userInfo.UserID)
 	if err != nil {
 		return fmt.Errorf("更新用户信息失败: %v", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("获取影响行数失败: %v", err)
+	}
+	if affected == 0 {
+		fmt.Printf("[UpdateUserInfo] 用户不存在: userID=%s\n", userInfo.UserID)
+		return fmt.Errorf("用户不存在")
 	}
 
 	return nil
