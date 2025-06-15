@@ -11,24 +11,27 @@ import (
 
 // UpdateUserInfo 更新用户信息
 func UpdateUserInfo(db *sql.DB, userInfo *model.UserInfo) error {
+	// 先检查用户是否存在
+	var exists bool
+	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM user_info WHERE user_id = ?)", userInfo.UserID).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("检查用户是否存在失败: %v", err)
+	}
+	if !exists {
+		fmt.Printf("[UpdateUserInfo] 用户不存在: userID=%s\n", userInfo.UserID)
+		return fmt.Errorf("用户不存在")
+	}
+
+	// 更新用户信息
 	query := `
         UPDATE user_info 
         SET nickname = ?, avatar_url = ?
         WHERE user_id = ?
     `
 
-	result, err := db.Exec(query, userInfo.Nickname, userInfo.AvatarURL, userInfo.UserID)
+	_, err = db.Exec(query, userInfo.Nickname, userInfo.AvatarURL, userInfo.UserID)
 	if err != nil {
 		return fmt.Errorf("更新用户信息失败: %v", err)
-	}
-
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("获取影响行数失败: %v", err)
-	}
-	if affected == 0 {
-		fmt.Printf("[UpdateUserInfo] 用户不存在: userID=%s\n", userInfo.UserID)
-		return fmt.Errorf("用户不存在")
 	}
 
 	return nil
