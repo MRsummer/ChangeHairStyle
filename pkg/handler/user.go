@@ -209,3 +209,47 @@ func HandleWxLogin(c *gin.Context) {
 		},
 	})
 }
+
+// HandleGetUserInfo 处理获取用户信息请求
+func HandleGetUserInfo(c *gin.Context) {
+	var req model.GetUserInfoRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    400,
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	dbConn := c.MustGet("db").(*sql.DB)
+	userInfo, err := db.GetUserInfo(dbConn, req.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    500,
+			"message": fmt.Sprintf("获取用户信息失败: %v", err),
+		})
+		return
+	}
+
+	if userInfo == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    404,
+			"message": "用户不存在",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data": model.GetUserInfoResponse{
+			UserID:         userInfo.UserID,
+			Nickname:       userInfo.Nickname,
+			AvatarURL:      userInfo.AvatarURL,
+			Coin:           userInfo.Coin,
+			InviteCode:     userInfo.InviteCode,
+			UsedInviteCode: userInfo.UsedInviteCode,
+			LastSignInDate: userInfo.LastSignInDate,
+		},
+	})
+}

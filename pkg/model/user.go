@@ -47,3 +47,19 @@ type WxLoginResponse struct {
 	Coin      int    `json:"coin"`
 	Token     string `json:"token"`
 }
+
+// GetUserInfoRequest 获取用户信息请求
+type GetUserInfoRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
+
+// GetUserInfoResponse 获取用户信息响应
+type GetUserInfoResponse struct {
+	UserID         string     `json:"user_id"`
+	Nickname       string     `json:"nickname"`
+	AvatarURL      string     `json:"avatar_url"`
+	Coin           int        `json:"coin"`
+	InviteCode     string     `json:"invite_code"`
+	UsedInviteCode string     `json:"used_invite_code"`
+	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
+}
