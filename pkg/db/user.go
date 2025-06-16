@@ -98,12 +98,12 @@ func UseInviteCode(db *sql.DB, userID, inviteCode string) error {
 	defer tx.Rollback()
 
 	// 检查是否已使用过邀请码
-	var usedInviteCode string
+	var usedInviteCode sql.NullString
 	err = tx.QueryRow("SELECT used_invite_code FROM user_info WHERE user_id = ?", userID).Scan(&usedInviteCode)
 	if err != nil && err != sql.ErrNoRows {
 		return fmt.Errorf("检查邀请码使用状态失败: %v", err)
 	}
-	if usedInviteCode != "" {
+	if usedInviteCode.Valid && usedInviteCode.String != "" {
 		return fmt.Errorf("您已使用过邀请码")
 	}
 
