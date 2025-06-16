@@ -157,7 +157,7 @@ func SignIn(db *sql.DB, userID string) error {
 	}
 
 	// 更新签到时间和coin
-	_, err = tx.Exec("UPDATE user_info SET last_sign_in_date = CURDATE(), coin = coin + 5 WHERE user_id = ?",
+	_, err = tx.Exec("UPDATE user_info SET last_sign_in_date = CURDATE(), coin = coin + 20 WHERE user_id = ?",
 		userID)
 	if err != nil {
 		return fmt.Errorf("更新签到信息失败: %v", err)
