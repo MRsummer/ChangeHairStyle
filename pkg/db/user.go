@@ -97,14 +97,18 @@ func UseInviteCode(db *sql.DB, userID, inviteCode string) error {
 	}
 	defer tx.Rollback()
 
-	// 检查是否已使用过邀请码
+	// 检查是否已使用过邀请码和是否是自己的邀请码
 	var usedInviteCode sql.NullString
-	err = tx.QueryRow("SELECT used_invite_code FROM user_info WHERE user_id = ?", userID).Scan(&usedInviteCode)
+	var ownInviteCode string
+	err = tx.QueryRow("SELECT used_invite_code, invite_code FROM user_info WHERE user_id = ?", userID).Scan(&usedInviteCode, &ownInviteCode)
 	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("检查邀请码使用状态失败: %v", err)
+		return fmt.Errorf("检查用户邀请码状态失败: %v", err)
 	}
 	if usedInviteCode.Valid && usedInviteCode.String != "" {
 		return fmt.Errorf("您已使用过邀请码")
+	}
+	if ownInviteCode == inviteCode {
+		return fmt.Errorf("不能使用自己的邀请码")
 	}
 
 	// 查找邀请人并增加coin
