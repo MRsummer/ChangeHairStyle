@@ -52,6 +52,7 @@ Resources:
           DB_NAME: ${DB_NAME}
           WX_APP_ID: ${WX_APP_ID}
           WX_APP_SECRET: ${WX_APP_SECRET}
+          LOG_LEVEL: ${LOG_LEVEL}
       Handler: main
       MemorySize: 256
       Runtime: Go1
