@@ -6,11 +6,27 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/db"
 	"github.com/MRsummer/ChangeHairStyle/pkg/model"
 	"github.com/gin-gonic/gin"
 )
+
+// getStatusFromEnv 从环境变量获取用户状态
+func getStatusFromEnv() int {
+	statusStr := os.Getenv("USER_STATUS")
+	if statusStr == "" {
+		return 0 // 默认值
+	}
+
+	status, err := strconv.Atoi(statusStr)
+	if err != nil {
+		return 0 // 解析失败时返回默认值
+	}
+
+	return status
+}
 
 // HandleUpdateUserInfo 处理更新用户信息请求
 func HandleUpdateUserInfo(c *gin.Context) {
@@ -197,6 +213,7 @@ func HandleWxLogin(c *gin.Context) {
 			InviteCode:     userInfo.InviteCode,
 			UsedInviteCode: userInfo.UsedInviteCode,
 			LastSignInDate: userInfo.LastSignInDate,
+			Status:         getStatusFromEnv(),
 		},
 	})
 }
@@ -241,6 +258,7 @@ func HandleGetUserInfo(c *gin.Context) {
 			InviteCode:     userInfo.InviteCode,
 			UsedInviteCode: userInfo.UsedInviteCode,
 			LastSignInDate: userInfo.LastSignInDate,
+			Status:         getStatusFromEnv(),
 		},
 	})
 }

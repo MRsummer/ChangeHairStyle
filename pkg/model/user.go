@@ -48,6 +48,7 @@ type WxLoginResponse struct {
 	InviteCode     string     `json:"invite_code"`
 	UsedInviteCode string     `json:"used_invite_code"`
 	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
+	Status         int        `json:"status"`
 }
 
 // GetUserInfoResponse 获取用户信息响应
@@ -59,4 +60,5 @@ type GetUserInfoResponse struct {
 	InviteCode     string     `json:"invite_code"`
 	UsedInviteCode string     `json:"used_invite_code"`
 	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
+	Status         int        `json:"status"`
 }
