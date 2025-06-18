@@ -8,6 +8,8 @@ import (
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/cos"
 	"github.com/MRsummer/ChangeHairStyle/pkg/db"
+	"github.com/MRsummer/ChangeHairStyle/pkg/logger"
+	"github.com/MRsummer/ChangeHairStyle/pkg/middleware"
 	"github.com/MRsummer/ChangeHairStyle/pkg/model"
 	"github.com/MRsummer/ChangeHairStyle/pkg/volcengine"
 	"github.com/gin-gonic/gin"
@@ -54,7 +56,7 @@ func HandleHairStyle(c *gin.Context) {
 	}
 	if !enough {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    500,
+			"code":    400,
 			"message": "造型币不足",
 		})
 		return
@@ -137,7 +139,13 @@ func HandleHairStyle(c *gin.Context) {
 	// 扣除coin
 	if err := db.DeductCoin(dbConn, req.UserID, 20); err != nil {
 		// 记录保存成功但扣除coin失败，记录错误但不影响返回结果
-		fmt.Printf("扣除coin失败: %v\n", err)
+		requestID := middleware.GetRequestID(c)
+
+		//这里需要单独记录，是因为返回了StatusOK，但实际出现了错误
+		logger.WithContext(map[string]interface{}{
+			"request_id": requestID,
+			"user_id":    req.UserID,
+		}).WithError(err).Error("扣除coin失败")
 	}
 
 	// 返回结果

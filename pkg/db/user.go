@@ -18,8 +18,7 @@ func UpdateUserInfo(db *sql.DB, userInfo *model.UserInfo) error {
 		return fmt.Errorf("检查用户是否存在失败: %v", err)
 	}
 	if !exists {
-		fmt.Printf("[UpdateUserInfo] 用户不存在: userID=%s\n", userInfo.UserID)
-		return fmt.Errorf("用户不存在")
+		return fmt.Errorf("用户不存在: userID=%s", userInfo.UserID)
 	}
 
 	// 更新用户信息

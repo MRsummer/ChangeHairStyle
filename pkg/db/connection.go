@@ -4,7 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/MRsummer/ChangeHairStyle/pkg/logger"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -26,13 +28,20 @@ func InitDB() (*sql.DB, error) {
 	// 连接数据库
 	db, err := sql.Open("mysql", connStr)
 	if err != nil {
+		logger.WithError(err).Error("打开数据库连接失败")
 		return nil, fmt.Errorf("连接数据库失败: %v", err)
 	}
 
+	// 设置连接池参数
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Hour)
+
 	// 测试连接
 	if err := db.Ping(); err != nil {
+		logger.WithError(err).Error("数据库连接测试失败")
 		return nil, fmt.Errorf("测试数据库连接失败: %v", err)
 	}
 
 	return db, nil
-} 
+}

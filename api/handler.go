@@ -12,6 +12,8 @@ import (
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/db"
 	"github.com/MRsummer/ChangeHairStyle/pkg/handler"
+	"github.com/MRsummer/ChangeHairStyle/pkg/logger"
+	"github.com/MRsummer/ChangeHairStyle/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,11 +21,14 @@ var r *gin.Engine
 var database *sql.DB
 
 func init() {
+	// 初始化日志系统
+	logger.Init()
+
 	// 初始化数据库连接
 	var err error
 	database, err = db.InitDB()
 	if err != nil {
-		log.Fatalf("初始化数据库失败: %v", err)
+		logger.Fatalf("初始化数据库失败: %v", err)
 	}
 
 	// 设置 Gin 为发布模式
@@ -32,6 +37,9 @@ func init() {
 	// 创建Gin引擎
 	r = gin.New()
 	r.Use(gin.Recovery())
+
+	// 添加请求追踪中间件
+	r.Use(middleware.TraceMiddleware())
 
 	// 添加数据库中间件
 	r.Use(func(c *gin.Context) {
@@ -73,6 +81,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		r.ServeHTTP(w, req)
 	})
+	logger.Info("服务器启动，监听端口 9000")
 	log.Fatal(http.ListenAndServe(":9000", nil))
 }
 
