@@ -45,8 +45,8 @@ type WxLoginResponse struct {
 	Nickname       string     `json:"nickname"`
 	AvatarURL      string     `json:"avatar_url"`
 	Coin           int        `json:"coin"`
-	InviteCode     string     `json:"invite_code"`
-	UsedInviteCode string     `json:"used_invite_code"`
+	Code           string     `json:"code"`
+	UsedCode       string     `json:"used_code"`
 	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
 	Status         int        `json:"status"`
 }
@@ -57,8 +57,8 @@ type GetUserInfoResponse struct {
 	Nickname       string     `json:"nickname"`
 	AvatarURL      string     `json:"avatar_url"`
 	Coin           int        `json:"coin"`
-	InviteCode     string     `json:"invite_code"`
-	UsedInviteCode string     `json:"used_invite_code"`
+	Code           string     `json:"code"`
+	UsedCode       string     `json:"used_code"`
 	LastSignInDate *time.Time `json:"last_sign_in_date,omitempty"`
 	Status         int        `json:"status"`
 }
