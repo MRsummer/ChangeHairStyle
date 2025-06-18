@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/MRsummer/ChangeHairStyle/pkg/cos"
 	"github.com/MRsummer/ChangeHairStyle/pkg/db"
@@ -73,20 +74,38 @@ func HandleHairStyle(c *gin.Context) {
 		// 直接使用图片URL调用API
 		imageURL, err = client.GenerateHairStyle(req.ImageURL, req.Prompt)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
-				"message": fmt.Sprintf("调用火山引擎API失败: %v", err),
-			})
+			// 检查错误信息是否包含429
+			errorMsg := err.Error()
+			if strings.Contains(errorMsg, "429") {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"code":    500,
+					"message": "当前使用人数较多、请过5秒后尝试",
+				})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"code":    500,
+					"message": fmt.Sprintf("调用火山引擎API失败: %v", err),
+				})
+			}
 			return
 		}
 	} else if req.Base64Image != "" {
 		// 使用base64图片数据调用API
 		imageURL, err = client.GenerateHairStyleWithBase64(req.Base64Image, req.Prompt)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"code":    500,
-				"message": fmt.Sprintf("调用火山引擎API失败: %v", err),
-			})
+			// 检查错误信息是否包含429
+			errorMsg := err.Error()
+			if strings.Contains(errorMsg, "429") {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"code":    500,
+					"message": "当前使用人数较多、请过5秒后尝试",
+				})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"code":    500,
+					"message": fmt.Sprintf("调用火山引擎API失败: %v", err),
+				})
+			}
 			return
 		}
 	} else {
