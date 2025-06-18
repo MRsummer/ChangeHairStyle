@@ -25,8 +25,8 @@ type UpdateUserInfoRequest struct {
 
 // UseInviteCodeRequest 使用邀请码请求
 type UseInviteCodeRequest struct {
-	UserID     string `json:"user_id" binding:"required"`
-	InviteCode string `json:"invite_code" binding:"required"`
+	UserID string `json:"user_id" binding:"required"`
+	Code   string `json:"code" binding:"required"`
 }
 
 // SignInRequest 签到请求

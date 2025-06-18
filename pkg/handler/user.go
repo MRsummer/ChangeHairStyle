@@ -73,7 +73,7 @@ func HandleUseInviteCode(c *gin.Context) {
 	}
 
 	dbConn := c.MustGet("db").(*sql.DB)
-	err := db.UseInviteCode(dbConn, req.UserID, req.InviteCode)
+	err := db.UseInviteCode(dbConn, req.UserID, req.Code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    500,

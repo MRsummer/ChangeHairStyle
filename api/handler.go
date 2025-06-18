@@ -64,7 +64,7 @@ func init() {
 	// 用户信息路由
 	r.POST("/api/user/info", handler.HandleUpdateUserInfo)
 	r.GET("/api/user/info/get", handler.HandleGetUserInfo)
-	r.POST("/api/user/invite-code/use", handler.HandleUseInviteCode)
+	r.POST("/api/user/code/use", handler.HandleUseInviteCode)
 	r.POST("/api/user/sign-in", handler.HandleSignIn)
 	r.POST("/api/user/wx-login", handler.HandleWxLogin)
 
